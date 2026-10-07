@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fredoka:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background)); --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border)); --color-input: hsl(var(--input)); --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card)); --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover)); --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary)); --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary)); --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted)); --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent)); --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive)); --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-sidebar: hsl(var(--sidebar)); --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--primary)); --color-sidebar-primary-foreground: hsl(var(--primary-foreground));
+  --color-sidebar-accent: hsl(var(--accent)); --color-sidebar-accent-foreground: hsl(var(--accent-foreground));
+  --color-sidebar-border: hsl(var(--border)); --color-sidebar-ring: hsl(var(--ring));
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-brand: 'Fredoka', 'DM Sans', sans-serif;
+  --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px);
+}
+
+@theme {
+  /* Paleta tomada del Instagram de @shoppelystore: rosa empolvado, crema, lila, kraft y frambuesa. */
+  --color-ink: #1f1519;
+  --color-cream: #fbf7f3;
+  --color-blush-50: #fcf5f4;
+  --color-blush-100: #f7e7e6;
+  --color-blush-200: #efd1d2;
+  --color-blush-300: #e4b4b8;
+  --color-blush-400: #d7969d;
+  --color-blush-500: #c47782;
+  --color-blush-600: #a95c6a;
+  --color-blush-700: #874452;
+  --color-lilac-50: #f6f2fb;
+  --color-lilac-100: #ebe3f6;
+  --color-lilac-300: #c6b3e3;
+  --color-lilac-500: #9b7fc4;
+  --color-lilac-700: #6d5396;
+  --color-sand-50: #faf5ef;
+  --color-sand-100: #f1e6d8;
+  --color-sand-300: #dcc3a5;
+  --color-sand-500: #b8946c;
+  --color-sand-700: #8a6a48;
+  --color-berry-500: #c23a55;
+  --color-berry-600: #a32d46;
+  --color-mint-100: #e3f1ee;
+  --color-mint-300: #a9d4cd;
+  --color-mint-500: #6fb3a8;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-marquee: marquee 28s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-twinkle: twinkle 2.4s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(6deg); }
+  }
+  @keyframes twinkle {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(0.6) rotate(45deg); opacity: 0.6; }
+  }
+}
+
+:root {
+  --background: 30 50% 97%; --foreground: 336 19% 10%;
+  --card: 0 0% 100%; --card-foreground: 336 19% 10%;
+  --popover: 0 0% 100%; --popover-foreground: 336 19% 10%;
+  --primary: 352 38% 62%; --primary-foreground: 0 0% 100%;
+  --secondary: 3 48% 94%; --secondary-foreground: 336 19% 10%;
+  --muted: 20 30% 95%; --muted-foreground: 340 6% 42%;
+  --accent: 3 48% 94%; --accent-foreground: 336 19% 10%;
+  --destructive: 349 54% 49%; --destructive-foreground: 0 0% 98%;
+  --border: 10 25% 90%; --input: 10 25% 87%; --ring: 352 38% 62%;
+  --sidebar: 0 0% 100%; --sidebar-foreground: 336 19% 10%;
+  --radius: 1rem;
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { -webkit-text-size-adjust: 100%; }
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-stopped { overflow: hidden; }
+  body { @apply bg-background text-foreground antialiased; font-family: var(--font-sans); }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--color-blush-500); outline-offset: 3px; }
+  ::selection { background: var(--color-blush-200); color: var(--color-ink); }
+}
+
+@utility page-wrap { width: min(1380px, calc(100% - 48px)); margin-inline: auto; }
+@utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.22em]; }
+@utility display { font-family: var(--font-serif); letter-spacing: -0.02em; line-height: 0.95; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition duration-300 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50; }
+@utility btn-dark { @apply btn bg-ink text-white hover:bg-blush-600; }
+@utility btn-pink { @apply btn bg-blush-400 text-ink hover:bg-blush-300; }
+@utility btn-light { @apply btn bg-white text-ink hover:bg-blush-100; }
+@utility btn-outline { @apply btn border border-ink/15 bg-transparent hover:border-ink; }
+@utility field { @apply w-full rounded-2xl border border-input bg-white px-4 py-3.5 text-[15px] outline-none transition placeholder:text-ink/35 focus:border-blush-500 focus:ring-4 focus:ring-blush-100; }
+@utility label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-ink/60; }
+@utility pbtn { @apply inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold whitespace-nowrap transition duration-200 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45; }
+@utility pbtn-primary { @apply pbtn bg-ink text-white shadow-[0_8px_20px_-8px_rgba(31,21,25,0.55)] hover:bg-blush-700; }
+@utility pbtn-pink { @apply pbtn bg-blush-600 text-white shadow-[0_8px_20px_-8px_rgba(169,92,106,0.7)] hover:bg-blush-700; }
+@utility pbtn-ghost { @apply pbtn border border-ink/10 bg-white text-ink hover:border-ink/30; }
+@utility pbtn-soft { @apply pbtn bg-blush-50 text-ink hover:bg-blush-100; }
+@utility pbtn-danger { @apply pbtn bg-red-50 text-red-700 hover:bg-red-100; }
+@utility pfield { @apply h-11 w-full rounded-xl border border-ink/10 bg-white px-3.5 text-[15px] outline-none transition placeholder:text-ink/35 focus:border-blush-500 focus:ring-4 focus:ring-blush-100 disabled:bg-ink/[0.03]; }
+@utility plabel { @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/50; }
+@utility pcard { @apply rounded-[26px] bg-white p-5 ring-1 ring-ink/[0.05] shadow-[0_1px_2px_rgba(20,16,20,0.04),0_12px_32px_-18px_rgba(20,16,20,0.18)]; }
+@utility tabular { font-variant-numeric: tabular-nums; }
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@layer components {
+  .grain::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.06; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@media (max-width: 767px) {
+  .page-wrap { width: calc(100% - 32px) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
