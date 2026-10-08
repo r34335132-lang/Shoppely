@@ -226,10 +226,12 @@ function Pos() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && query.trim()) {
-                if (addByCode(query.trim())) setQuery('');
-                else if (grid.length === 1) { tapProduct(grid[0]); setQuery(''); }
-              }
+              const text = query.trim();
+              if (e.key !== 'Enter' || !text) return;
+              e.preventDefault();
+              if (!findByCode(products, text) && grid.length === 1) tapProduct(grid[0]);
+              else if (!addByCode(text)) return;
+              setQuery('');
             }}
             placeholder="Buscar o escribir código de barras / SKU…"
             className="h-12 w-full rounded-full border border-ink/10 bg-white pl-11 pr-10 text-[15px] outline-none transition select-text focus:border-blush-500 focus:ring-4 focus:ring-blush-100"

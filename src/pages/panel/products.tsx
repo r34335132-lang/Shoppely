@@ -2,18 +2,22 @@ import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'wouter';
 import { AnimatePresence, Reorder, motion } from 'framer-motion';
 import {
-  ArrowDown, ArrowUp, Barcode, Copy, Eye, EyeOff, FolderOpen, ImagePlus, Loader2, Pencil, Plus, Sparkles, Star, Tag, Trash2, X,
+  AlertTriangle, ArrowDown, ArrowUp, Barcode, Camera, Copy, Eye, EyeOff, FolderOpen, ImagePlus, Loader2, Pencil, Plus, ScanBarcode, Sparkles, Star, Tag,
+  Trash2, X,
 } from 'lucide-react';
 import { useAuth } from '@/providers/auth';
 import { useSettings } from '@/hooks/queries';
 import { useAction, useAdminCategories, useAdminProducts } from '@/hooks/admin-queries';
 import { deleteCategory, deleteProduct, saveCategory, saveProduct, setProductFlags, uploadImage } from '@/lib/admin-api';
+import { findByCode, looksLikeCode } from '@/lib/codes';
 import { money, totalStock } from '@/lib/format';
+import { beep } from '@/lib/sound';
 import type { AdminProduct, Category, ProductInput } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import {
   Card, Empty, Field, Modal, PageHeader, Pill, SearchInput, Segmented, Sheet, SkeletonRows, Switch, useConfirm,
 } from '@/components/panel/kit';
+import { CameraScanner, useBarcodeWedge } from '@/components/panel/scanner';
 import { toast } from 'sonner';
 
 type Tab = 'products' | 'categories';
@@ -22,34 +26,56 @@ type Visibility = 'all' | 'visible' | 'hidden' | 'featured' | 'low';
 export default function Products() {
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState<Tab>('products');
+  const [scanOpen, setScanOpen] = useState(false);
+  const { data: products = [] } = useAdminProducts();
   const editing = params.get('editar');
   const creating = params.get('nuevo') === '1';
+  const newCode = params.get('codigo');
 
   const openEditor = (id: string | null) =>
     setParams(id ? { editar: id } : { nuevo: '1' });
   const closeEditor = () => setParams({}, { replace: true });
+
+  /** Escaneo: abre el producto si ya existe; si no, empieza uno nuevo con ese código. */
+  const openByCode = (code: string) => {
+    const hit = findByCode(products, code, true);
+    beep('scan');
+    if (hit) {
+      setParams({ editar: hit.product.id });
+      toast.success(`${hit.product.name} · ${hit.variant.name}`);
+    } else {
+      setParams({ nuevo: '1', codigo: code });
+      toast(`Código nuevo ${code}`, { description: 'Completa los datos para registrar el producto.' });
+    }
+  };
+
+  useBarcodeWedge(openByCode, tab === 'products' && !creating && !editing && !scanOpen);
 
   return (
     <>
       <PageHeader
         eyebrow="Catálogo"
         title="Productos"
-        subtitle="Lo que agregues o actives aquí aparece al instante en la tienda."
+        subtitle="Lo que agregues o actives aquí aparece al instante en la tienda. Escanea un código para abrirlo o registrarlo."
         actions={
           <>
             <Segmented value={tab} onChange={setTab} options={[{ value: 'products', label: 'Productos' }, { value: 'categories', label: 'Categorías' }]} />
             {tab === 'products' && (
-              <button type="button" className="pbtn-pink" onClick={() => openEditor(null)}><Plus className="h-4 w-4" /> Nuevo producto</button>
+              <>
+                <button type="button" className="pbtn-ghost" onClick={() => setScanOpen(true)}><ScanBarcode className="h-4 w-4" /> Escanear</button>
+                <button type="button" className="pbtn-pink" onClick={() => openEditor(null)}><Plus className="h-4 w-4" /> Nuevo producto</button>
+              </>
             )}
           </>
         }
       />
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-          {tab === 'products' ? <ProductGrid onEdit={openEditor} /> : <Categories />}
+          {tab === 'products' ? <ProductGrid onEdit={openEditor} onCode={openByCode} /> : <Categories />}
         </motion.div>
       </AnimatePresence>
-      <ProductEditor open={creating || !!editing} productId={editing} onClose={closeEditor} />
+      <ProductEditor open={creating || !!editing} productId={editing} initialCode={creating ? newCode : null} onClose={closeEditor} />
+      <CameraScanner open={scanOpen} onClose={() => setScanOpen(false)} onDetect={openByCode} title="Escanear producto" />
     </>
   );
 }
@@ -57,7 +83,7 @@ export default function Products() {
 // ---------------------------------------------------------------------
 // Lista
 // ---------------------------------------------------------------------
-function ProductGrid({ onEdit }: { onEdit: (id: string) => void }) {
+function ProductGrid({ onEdit, onCode }: { onEdit: (id: string) => void; onCode: (code: string) => void }) {
   const { data: products, isLoading } = useAdminProducts();
   const { data: categories = [] } = useAdminCategories();
   const [search, setSearch] = useState('');
@@ -81,7 +107,23 @@ function ProductGrid({ onEdit }: { onEdit: (id: string) => void }) {
       <Card className="p-3! sm:p-4!">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <SearchInput value={search} onChange={setSearch} placeholder="Nombre, marca, SKU o código de barras" className="min-w-[220px] flex-1" />
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Nombre, SKU o escanea un código"
+              className="min-w-[220px] flex-1"
+              onKeyDown={(e) => {
+                const text = search.trim();
+                if (e.key !== 'Enter' || !text) return;
+                if (findByCode(products ?? [], text, true) || (looksLikeCode(text) && list.length === 0)) {
+                  onCode(text);
+                  setSearch('');
+                } else if (list.length === 1) {
+                  onEdit(list[0].id);
+                  setSearch('');
+                }
+              }}
+            />
             <Segmented
               value={visibility}
               onChange={setVisibility}
@@ -245,7 +287,7 @@ function generateEan13() {
 
 const variantLabel = (v: VariantForm) => v.name.trim() || [v.size.trim(), v.color.trim()].filter(Boolean).join(' / ') || 'Única';
 
-function ProductEditor({ open, productId, onClose }: { open: boolean; productId: string | null; onClose: () => void }) {
+function ProductEditor({ open, productId, initialCode, onClose }: { open: boolean; productId: string | null; initialCode: string | null; onClose: () => void }) {
   const { data: products } = useAdminProducts();
   const product = productId ? products?.find((p) => p.id === productId) : undefined;
   const loading = !!productId && !products;
@@ -257,26 +299,67 @@ function ProductEditor({ open, productId, onClose }: { open: boolean; productId:
       title={productId ? product?.name ?? 'Editar producto' : 'Nuevo producto'}
       subtitle={productId ? 'Cambia fotos, precios, variantes y visibilidad' : 'Llena los datos y guárdalo para publicarlo'}
     >
-      {loading ? <SkeletonRows rows={6} /> : <EditorBody key={productId ?? 'new'} product={product} onDone={onClose} />}
+      {loading ? <SkeletonRows rows={6} /> : <EditorBody key={productId ?? `new-${initialCode ?? ''}`} product={product} initialCode={initialCode} onDone={onClose} />}
     </Sheet>
   );
 }
 
-function EditorBody({ product, onDone }: { product: AdminProduct | undefined; onDone: () => void }) {
+function EditorBody({ product, initialCode, onDone }: { product: AdminProduct | undefined; initialCode: string | null; onDone: () => void }) {
   const { role } = useAuth();
   const admin = role === 'admin';
   const { data: settings } = useSettings();
   const { data: categories = [] } = useAdminCategories();
+  const { data: allProducts = [] } = useAdminProducts();
   const confirm = useConfirm();
-  const [form, setForm] = useState<ProductForm>(() => toForm(product));
+  const [form, setForm] = useState<ProductForm>(() => {
+    const initial = toForm(product);
+    if (!product && initialCode) initial.variants[0].barcode = initialCode;
+    return initial;
+  });
   const [uploading, setUploading] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
+  const [scanFor, setScanFor] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const rate = settings?.exchange_rate ?? 18;
 
   const set = <K extends keyof ProductForm>(key: K, value: ProductForm[K]) => setForm((f) => ({ ...f, [key]: value }));
   const setVariant = (key: string, patch: Partial<VariantForm>) =>
     setForm((f) => ({ ...f, variants: f.variants.map((v) => (v.key === key ? { ...v, ...patch } : v)) }));
+
+  /** Otro producto o variante que ya usa este código. */
+  const codeConflict = (v: VariantForm) => {
+    const code = v.barcode.trim().toUpperCase();
+    if (!code) return null;
+    if (form.variants.some((o) => o.key !== v.key && o.barcode.trim().toUpperCase() === code)) return 'Repetido en otra variante';
+    const hit = findByCode(allProducts, code, true);
+    if (hit && hit.variant.id !== v.id) return `Ya lo usa «${hit.product.name} · ${hit.variant.name}»`;
+    return null;
+  };
+
+  /** Lector sin campo enfocado: el código va a la primera variante sin código, o a una nueva. */
+  const assignScanned = (code: string) => {
+    const upper = code.toUpperCase();
+    const own = form.variants.find((v) => v.barcode.trim().toUpperCase() === upper || v.sku.trim().toUpperCase() === upper);
+    if (own) {
+      beep('scan');
+      toast(`Ese código ya está en la variante «${[own.size, own.color].filter(Boolean).join(' · ') || own.name || 'Única'}»`);
+      return;
+    }
+    const other = findByCode(allProducts, code, true);
+    if (other && other.product.id !== product?.id) {
+      beep('error');
+      toast.error(`Ese código ya lo usa «${other.product.name} · ${other.variant.name}»`);
+      return;
+    }
+    beep('scan');
+    setForm((f) => {
+      const target = f.variants.find((v) => !v.barcode.trim());
+      if (target) return { ...f, variants: f.variants.map((v) => (v === target ? { ...v, barcode: code } : v)) };
+      return { ...f, variants: [...f.variants, emptyVariant({ barcode: code })] };
+    });
+    toast.success(`Código ${code} agregado`);
+  };
+  useBarcodeWedge(assignScanned, !scanFor);
 
   const save = useAction(saveProduct, product ? 'Producto actualizado' : 'Producto creado');
   const remove = useAction(deleteProduct, 'Producto eliminado');
@@ -481,10 +564,27 @@ function EditorBody({ product, onDone }: { product: AdminProduct | undefined; on
                       </div>
                     </Field>
                     <Field label="Código de barras" className="col-span-2 sm:col-span-1">
-                      <div className="flex gap-2">
-                        <input value={v.barcode} onChange={(e) => setVariant(v.key, { barcode: e.target.value.replace(/\s/g, '') })} className="pfield font-mono" placeholder="Escanéalo aquí" inputMode="numeric" />
+                      <div className="flex gap-1.5">
+                        <input
+                          value={v.barcode}
+                          onChange={(e) => setVariant(v.key, { barcode: e.target.value.replace(/\s/g, '') })}
+                          onKeyDown={(e) => {
+                            if (e.key !== 'Enter') return;
+                            e.preventDefault();
+                            const inputs = [...document.querySelectorAll<HTMLInputElement>('input[data-barcode]')];
+                            const next = inputs[inputs.indexOf(e.currentTarget) + 1];
+                            if (next) next.focus();
+                            else e.currentTarget.blur();
+                          }}
+                          data-barcode
+                          className={cn('pfield min-w-0 font-mono', codeConflict(v) && 'border-amber-400!')}
+                          placeholder="Escanéalo aquí"
+                          inputMode="numeric"
+                        />
+                        <button type="button" onClick={() => setScanFor(v.key)} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-ink text-white hover:bg-blush-700" title="Escanear con la cámara" aria-label="Escanear con la cámara"><Camera className="h-4 w-4" /></button>
                         <button type="button" onClick={() => setVariant(v.key, { barcode: generateEan13() })} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-ink/[0.05] hover:bg-ink/10" title="Generar código" aria-label="Generar código"><Barcode className="h-4 w-4" /></button>
                       </div>
+                      {codeConflict(v) && <span className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-700"><AlertTriangle className="h-3 w-3 shrink-0" /> {codeConflict(v)}</span>}
                     </Field>
                     {v.id ? (
                       <div>
@@ -518,6 +618,13 @@ function EditorBody({ product, onDone }: { product: AdminProduct | undefined; on
           </div>
         </div>
       </Section>
+
+      <CameraScanner
+        open={!!scanFor}
+        onClose={() => setScanFor(null)}
+        onDetect={(code) => { beep('scan'); if (scanFor) setVariant(scanFor, { barcode: code }); }}
+        title="Escanear código de barras"
+      />
 
       <div className="fixed inset-x-0 bottom-0 z-10 flex items-center gap-2 border-t border-ink/5 bg-white/90 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:absolute sm:rounded-b-[28px] sm:px-6 sm:pb-4">
         {product && <button type="button" className="pbtn-danger" onClick={askDelete} disabled={remove.isPending}><Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Eliminar</span></button>}

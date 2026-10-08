@@ -1,8 +1,8 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'wouter';
+import { useLocation, useSearchParams } from 'wouter';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Boxes, History, Minus, PackageCheck, Plus, ScanBarcode } from 'lucide-react';
+import { Boxes, Camera, History, Minus, PackageCheck, Plus, ScanBarcode } from 'lucide-react';
 import { useAction, useAdminCategories, useAdminProducts, useMovements } from '@/hooks/admin-queries';
 import { adjustStock, setStock } from '@/lib/admin-api';
 import { findByCode } from '@/lib/codes';
@@ -19,29 +19,41 @@ type Row = Variant & { product: AdminProduct };
 
 export default function Inventory() {
   const [params, setParams] = useSearchParams();
+  const [, navigate] = useLocation();
   const [tab, setTab] = useState<Tab>(params.get('tab') === 'movimientos' ? 'moves' : 'stock');
   const [scanOpen, setScanOpen] = useState(params.get('scan') === '1');
   const [adjusting, setAdjusting] = useState<Row | null>(null);
-  const { data: products = [] } = useAdminProducts();
+  const [pendingCode, setPendingCode] = useState(params.get('codigo'));
+  const { data: products = [], isSuccess } = useAdminProducts();
 
   useEffect(() => {
-    if (params.has('scan') || params.has('tab')) {
-      setParams((p) => { const n = new URLSearchParams(p); n.delete('scan'); n.delete('tab'); return n; }, { replace: true });
+    if (params.has('scan') || params.has('tab') || params.has('codigo')) {
+      setParams((p) => { const n = new URLSearchParams(p); n.delete('scan'); n.delete('tab'); n.delete('codigo'); return n; }, { replace: true });
     }
-    // Solo al entrar: los parámetros abren el escáner o la pestaña una vez.
+    // Solo al entrar: los parámetros abren el escáner, la pestaña o un producto una vez.
   }, []);
 
   const openByCode = (code: string) => {
     const hit = findByCode(products, code);
     if (!hit) {
       beep('error');
-      toast.error(`No hay ningún producto con el código ${code}`);
+      toast.error(`No hay ningún producto con el código ${code}`, {
+        action: { label: 'Crear producto', onClick: () => navigate(`/productos?nuevo=1&codigo=${encodeURIComponent(code)}`) },
+        duration: 8000,
+      });
       return;
     }
     beep('scan');
     setTab('stock');
     setAdjusting({ ...hit.variant, product: hit.product });
   };
+
+  useEffect(() => {
+    if (pendingCode && isSuccess) {
+      setPendingCode(null);
+      openByCode(pendingCode);
+    }
+  }, [pendingCode, isSuccess]);
 
   useBarcodeWedge(openByCode, !adjusting && !scanOpen);
 
@@ -66,7 +78,7 @@ export default function Inventory() {
         </motion.div>
       </AnimatePresence>
       <CameraScanner open={scanOpen} onClose={() => setScanOpen(false)} onDetect={openByCode} />
-      <AdjustModal row={adjusting} onClose={() => setAdjusting(null)} />
+      <AdjustModal row={adjusting} onClose={() => setAdjusting(null)} onOtherCode={openByCode} />
     </>
   );
 }
@@ -108,10 +120,12 @@ function StockList({ initialFilter, onAdjust, onCode }: { initialFilter: StockFi
               placeholder="Producto, SKU o código (Enter para abrir)"
               className="min-w-[220px] flex-1"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && search.trim()) {
-                  onCode(search.trim());
-                  setSearch('');
-                }
+                const text = search.trim();
+                if (e.key !== 'Enter' || !text) return;
+                e.preventDefault();
+                if (!findByCode(products ?? [], text) && rows.length === 1) onAdjust(rows[0]);
+                else onCode(text);
+                setSearch('');
               }}
             />
             <Segmented
@@ -170,15 +184,15 @@ function StockList({ initialFilter, onAdjust, onCode }: { initialFilter: StockFi
 // ---------------------------------------------------------------------
 type Mode = 'in' | 'out' | 'count';
 
-function AdjustModal({ row, onClose }: { row: Row | null; onClose: () => void }) {
+function AdjustModal({ row, onClose, onOtherCode }: { row: Row | null; onClose: () => void; onOtherCode: (code: string) => void }) {
   return (
     <Modal open={!!row} onClose={onClose} title="Ajustar existencias" size="md">
-      {row && <AdjustForm key={row.id} row={row} onDone={onClose} />}
+      {row && <AdjustForm key={row.id} row={row} onDone={onClose} onOtherCode={onOtherCode} />}
     </Modal>
   );
 }
 
-function AdjustForm({ row, onDone }: { row: Row; onDone: () => void }) {
+function AdjustForm({ row, onDone, onOtherCode }: { row: Row; onDone: () => void; onOtherCode: (code: string) => void }) {
   const { data: products } = useAdminProducts();
   const live = products?.flatMap((p) => p.variants).find((v) => v.id === row.id)?.stock ?? row.stock;
   const { data: history = [] } = useMovements(row.id, 5);
@@ -186,6 +200,20 @@ function AdjustForm({ row, onDone }: { row: Row; onDone: () => void }) {
   const [qty, setQty] = useState('');
   const [reason, setReason] = useState<MovementReason>('damage');
   const [note, setNote] = useState('');
+  const [cameraOpen, setCameraOpen] = useState(false);
+
+  /** Cada escaneo del mismo código suma una pieza; uno distinto cambia de producto. */
+  const onScan = (code: string) => {
+    const c = code.trim().toUpperCase();
+    if (c === (row.barcode ?? '').toUpperCase() || c === (row.sku ?? '').toUpperCase()) {
+      beep('scan');
+      setQty((q) => String((Number(q) || 0) + 1));
+    } else {
+      setCameraOpen(false);
+      onOtherCode(code);
+    }
+  };
+  useBarcodeWedge(onScan, !cameraOpen);
   const n = Number(qty) || 0;
   const after = mode === 'count' ? n : mode === 'in' ? live + n : live - n;
   const invalid = qty === '' || (mode !== 'count' && n === 0) || after < 0 || (mode === 'count' && n === live);
@@ -219,7 +247,10 @@ function AdjustForm({ row, onDone }: { row: Row; onDone: () => void }) {
 
       <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
         <div>
-          <div className="mb-3 rounded-2xl bg-ink p-4 text-white">
+          <div className="relative mb-3 rounded-2xl bg-ink p-4 text-white">
+            <button type="button" onClick={() => setCameraOpen(true)} className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20">
+              <Camera className="h-3.5 w-3.5" /> Contar escaneando
+            </button>
             <p className="text-xs text-white/60">{mode === 'count' ? 'Piezas contadas' : mode === 'in' ? 'Piezas que llegan' : 'Piezas que salen'}</p>
             <p className="text-4xl font-bold tabular">{qty || '0'}</p>
             <p className={cn('mt-1 text-sm', after < 0 ? 'text-red-300' : 'text-blush-300')}>
@@ -240,6 +271,8 @@ function AdjustForm({ row, onDone }: { row: Row; onDone: () => void }) {
         </div>
         <NumberPad value={qty} onChange={setQty} decimals={false} />
       </div>
+      <p className="-mt-1 text-center text-xs text-ink/45">Con la pistola: cada vez que escaneas este producto se suma 1 pieza.</p>
+      <CameraScanner open={cameraOpen} onClose={() => setCameraOpen(false)} onDetect={onScan} continuous title={`Contando · ${row.product.name}`} />
 
       <button type="button" className="pbtn-pink h-14! w-full text-base" disabled={invalid || run.isPending} onClick={() => run.mutate(undefined, { onSuccess: onDone })}>
         <PackageCheck className="h-5 w-5" /> Guardar movimiento
