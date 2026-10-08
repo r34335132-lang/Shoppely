@@ -114,7 +114,7 @@ export default function Orders() {
           <Empty icon={ClipboardList} title="No hay pedidos" text="Prueba con otros filtros o periodo." />
         ) : (
           <ul>
-            <li className="hidden grid-cols-[88px_1.5fr_1fr_130px_130px_130px] gap-3 px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40 lg:grid">
+            <li className="hidden grid-cols-[88px_1.5fr_1fr_130px_130px_130px] gap-3 px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40 xl:grid">
               <span>Folio</span><span>Cliente</span><span>Artículos</span><span>Estado</span><span>Pago</span><span className="text-right">Total</span>
             </li>
             {orders.map((o, i) => (
@@ -123,11 +123,11 @@ export default function Orders() {
                   type="button"
                   onClick={() => setParam('id', o.id)}
                   className={cn(
-                    'grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 rounded-2xl px-3 py-3 text-left transition hover:bg-blush-50/70 lg:grid-cols-[88px_1.5fr_1fr_130px_130px_130px]',
+                    'grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 rounded-2xl px-3 py-3 text-left transition hover:bg-blush-50/70 xl:grid-cols-[88px_1.5fr_1fr_130px_130px_130px]',
                     selected === o.id && 'bg-blush-50',
                   )}
                 >
-                  <span className="hidden lg:block">
+                  <span className="hidden xl:block">
                     <b className="block text-sm">#{o.folio}</b>
                     <span className="text-[11px] text-ink/45">{shortDate(o.created_at)}</span>
                   </span>
@@ -137,15 +137,15 @@ export default function Orders() {
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold">
-                        <span className="lg:hidden">#{o.folio} · </span>{o.customer_name ?? (o.channel === 'pos' ? 'Venta en tienda' : 'Cliente')}
+                        <span className="xl:hidden">#{o.folio} · </span>{o.customer_name ?? (o.channel === 'pos' ? 'Venta en tienda' : 'Cliente')}
                       </span>
                       <span className="block truncate text-xs text-ink/50">
-                        <span className="lg:hidden">{shortDate(o.created_at)} · </span>
+                        <span className="xl:hidden">{shortDate(o.created_at)} · </span>
                         {o.channel === 'pos' ? `POS · ${o.cashier_name ?? 'Caja'}` : o.delivery_method === 'pickup' ? 'Recoge en tienda' : 'Envío a domicilio'}
                       </span>
                     </span>
                   </span>
-                  <span className="hidden items-center -space-x-2 lg:flex">
+                  <span className="hidden items-center -space-x-2 xl:flex">
                     {o.items.slice(0, 3).map((it) => (
                       it.image_url
                         ? <img key={it.id} src={it.image_url} alt="" className="h-8 w-8 rounded-lg object-cover ring-2 ring-white" />
@@ -153,9 +153,9 @@ export default function Orders() {
                     ))}
                     <span className="pl-4 text-xs text-ink/50">{o.items.reduce((s, it) => s + it.quantity, 0)} pzs</span>
                   </span>
-                  <span className="col-start-1 row-start-2 flex gap-1.5 lg:col-start-auto lg:row-start-auto lg:block"><StatusPill status={o.status} /><span className="lg:hidden"><PaymentPill status={o.payment_status} /></span></span>
-                  <span className="hidden lg:block"><PaymentPill status={o.payment_status} /></span>
-                  <span className="col-start-2 row-span-2 row-start-1 text-right lg:col-start-auto lg:row-span-1 lg:row-start-auto">
+                  <span className="col-start-1 row-start-2 flex flex-wrap gap-1.5 xl:col-start-auto xl:row-start-auto xl:block"><StatusPill status={o.status} /><span className="xl:hidden"><PaymentPill status={o.payment_status} /></span></span>
+                  <span className="hidden xl:block"><PaymentPill status={o.payment_status} /></span>
+                  <span className="col-start-2 row-span-2 row-start-1 text-right xl:col-start-auto xl:row-span-1 xl:row-start-auto">
                     <b className="block text-sm tabular">{money(o.total, o.currency)}</b>
                     <span className="text-[11px] text-ink/45">{paymentMethodLabel[o.payment_method]}</span>
                   </span>
@@ -251,7 +251,7 @@ function OrderDetail({ order }: { order: AdminOrder }) {
             {flow.map((s, i) => {
               const done = i <= current;
               return (
-                <div key={s} className="flex flex-1 flex-col items-center gap-2 text-center">
+                <div key={s} className="flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
                   <div className="flex w-full items-center">
                     <span className={cn('h-0.5 flex-1', i === 0 ? 'opacity-0' : done ? 'bg-blush-600' : 'bg-ink/10')} />
                     <motion.button
@@ -260,7 +260,7 @@ function OrderDetail({ order }: { order: AdminOrder }) {
                       disabled={statusAction.isPending || i === current}
                       onClick={() => statusAction.mutate({ status: s })}
                       className={cn(
-                        'grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-bold transition',
+                        'grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition sm:h-10 sm:w-10 sm:text-sm',
                         done ? 'bg-blush-600 text-white shadow-[0_6px_16px_-6px_rgba(169,92,106,0.8)]' : 'bg-ink/[0.06] text-ink/50 hover:bg-blush-100',
                       )}
                       aria-label={orderStatusLabel[s]}
@@ -269,7 +269,7 @@ function OrderDetail({ order }: { order: AdminOrder }) {
                     </motion.button>
                     <span className={cn('h-0.5 flex-1', i === flow.length - 1 ? 'opacity-0' : i < current ? 'bg-blush-600' : 'bg-ink/10')} />
                   </div>
-                  <span className={cn('text-[11px] font-semibold leading-tight', done ? 'text-ink' : 'text-ink/45')}>{orderStatusLabel[s]}</span>
+                  <span className={cn('w-full hyphens-auto px-0.5 text-[10px] font-semibold leading-tight [overflow-wrap:break-word] sm:text-[11px]', done ? 'text-ink' : 'text-ink/45')}>{orderStatusLabel[s]}</span>
                 </div>
               );
             })}
@@ -284,12 +284,12 @@ function OrderDetail({ order }: { order: AdminOrder }) {
 
       {!cancelled && order.payment_status === 'pending' && (
         <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center gap-3 rounded-3xl bg-amber-50 p-4 ring-1 ring-amber-200/60">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-amber-100 text-amber-800"><CreditCard className="h-5 w-5" /></span>
-          <div className="min-w-0 flex-1">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-800"><CreditCard className="h-5 w-5" /></span>
+          <div className="min-w-[180px] flex-1">
             <p className="font-bold">Pago pendiente · {paymentMethodLabel[order.payment_method]}</p>
             <p className="text-sm text-ink/60">Confírmalo cuando veas el dinero en la cuenta o en caja.</p>
           </div>
-          <button type="button" className="pbtn-primary" onClick={askPayment} disabled={payAction.isPending}>Confirmar pago</button>
+          <button type="button" className="pbtn-primary w-full sm:w-auto" onClick={askPayment} disabled={payAction.isPending}>Confirmar pago</button>
         </motion.section>
       )}
 
@@ -337,11 +337,12 @@ function OrderDetail({ order }: { order: AdminOrder }) {
               <Thumb src={it.image_url} className="h-12 w-12 rounded-xl" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{it.product_name}</p>
-                <p className="text-xs text-ink/50">{[it.variant_name, it.sku].filter(Boolean).join(' · ')}</p>
+                <p className="truncate text-xs text-ink/50">{[it.variant_name, it.sku].filter(Boolean).join(' · ')}</p>
+                <p className="text-xs text-ink/60 sm:hidden">{it.quantity} × {m(it.unit_price)}</p>
                 {hasCost && it.unit_cost_mxn != null && <p className="text-[11px] text-ink/45">Costo {money(it.unit_cost_mxn)} c/u</p>}
               </div>
-              <p className="text-sm text-ink/60">{it.quantity} × {m(it.unit_price)}</p>
-              <p className="w-24 text-right text-sm font-bold tabular">{m(it.line_total)}</p>
+              <p className="hidden shrink-0 text-sm text-ink/60 sm:block">{it.quantity} × {m(it.unit_price)}</p>
+              <p className="shrink-0 text-right text-sm font-bold tabular sm:w-24">{m(it.line_total)}</p>
             </li>
           ))}
         </ul>

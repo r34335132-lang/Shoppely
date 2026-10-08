@@ -95,7 +95,7 @@ function SettingsForm({ initial }: { initial: StoreSettings }) {
           <p className="-mt-1 mb-4 text-sm text-ink/60">
             Se le suma a la clienta lo que cobra Mercado Pago, para que a ti te quede el precio completo. Solo aplica al pagar con Mercado Pago.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
             <FeeCard
               icon={Globe}
               title="Tienda en línea"
@@ -150,10 +150,10 @@ function SettingsForm({ initial }: { initial: StoreSettings }) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed inset-x-3 bottom-4 z-40 mx-auto flex max-w-xl items-center gap-3 rounded-full bg-ink p-2 pl-5 text-white shadow-2xl lg:left-[290px]"
+            className="fixed inset-x-3 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-xl items-center gap-2 rounded-full bg-ink p-2 pl-4 text-white shadow-2xl sm:gap-3 sm:pl-5 lg:left-[290px]"
           >
-            <span className="flex-1 text-sm">Tienes cambios sin guardar</span>
-            <button type="button" className="pbtn h-10! text-white/70 hover:text-white" onClick={() => setS(initial)}>Descartar</button>
+            <span className="min-w-0 flex-1 text-[13px] leading-tight sm:text-sm">Tienes cambios sin guardar</span>
+            <button type="button" className="pbtn h-10! px-3! text-white/70 hover:text-white sm:px-5!" onClick={() => setS(initial)}>Descartar</button>
             <button type="button" className="pbtn h-10! bg-blush-400 text-ink hover:bg-blush-300" disabled={save.isPending} onClick={() => save.mutate(s)}><Save className="h-4 w-4" /> Guardar</button>
           </motion.div>
         )}

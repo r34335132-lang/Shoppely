@@ -29,10 +29,10 @@ export default function Reviews() {
   return (
     <>
       <PageHeader eyebrow="Tienda" title="Reseñas" subtitle="Lo que opinan tus clientas. Responde, oculta o elimina." />
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1.4fr]">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[1fr_1fr_1.4fr]">
         <StatCard highlight label="Calificación promedio" value={avg} format="decimal" icon={Star} hint={<span className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={cn('h-3.5 w-3.5', i <= Math.round(avg) ? 'fill-white text-white' : 'text-white/40')} />)}</span>} />
         <StatCard label="Reseñas publicadas" value={published.length} delay={0.05} hint={`${all.length - published.length} ocultas · ${all.filter((r) => !r.admin_reply).length} sin respuesta`} />
-        <Card delay={0.1}>
+        <Card delay={0.1} className="col-span-2 lg:col-span-1">
           <ul className="space-y-2">
             {dist.map(({ n, count }, i) => (
               <li key={n} className="flex items-center gap-3 text-sm">
@@ -67,7 +67,7 @@ export default function Reviews() {
       {isLoading ? <SkeletonRows rows={4} className="mt-4" /> : list.length === 0 ? (
         <Card className="mt-4"><Empty icon={MessageSquareQuote} title="Sin reseñas" text="Cuando tus clientas opinen aparecerán aquí." /></Card>
       ) : (
-        <div className="mt-4 columns-1 gap-4 lg:columns-2 2xl:columns-3">
+        <div className="mt-4 columns-1 gap-4 md:columns-2 2xl:columns-3">
           <AnimatePresence>
             {list.map((r, i) => <ReviewCard key={r.id} review={r} index={i} />)}
           </AnimatePresence>

@@ -54,8 +54,8 @@ export default function Coupons() {
                   transition={{ type: 'spring', stiffness: 260, damping: 24, delay: i * 0.04 }}
                   className="relative flex overflow-hidden rounded-[26px] bg-white ring-1 ring-ink/5"
                 >
-                  <div className={cn('relative flex w-32 shrink-0 flex-col items-center justify-center p-4 text-white', c.active ? 'bg-[linear-gradient(150deg,var(--color-blush-400),var(--color-blush-700))]' : 'bg-ink/40')}>
-                    <p className="text-3xl font-bold leading-none">{c.kind === 'percent' ? `${c.value}%` : money(c.value)}</p>
+                  <div className={cn('relative flex w-28 shrink-0 flex-col items-center justify-center p-3 text-center text-white sm:w-32 sm:p-4', c.active ? 'bg-[linear-gradient(150deg,var(--color-blush-400),var(--color-blush-700))]' : 'bg-ink/40')}>
+                    <p className={cn('font-bold leading-none', c.kind === 'percent' ? 'text-3xl' : 'text-lg leading-tight sm:text-xl')}>{c.kind === 'percent' ? `${c.value}%` : money(c.value)}</p>
                     <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-white/75">descuento</p>
                     <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#f7f2ee]" />
                   </div>
@@ -64,9 +64,9 @@ export default function Coupons() {
                       <button
                         type="button"
                         onClick={() => { void navigator.clipboard?.writeText(c.code); toast.success(`Código ${c.code} copiado`); }}
-                        className="flex items-center gap-1.5 font-mono text-lg font-bold tracking-wider hover:text-blush-700"
+                        className="flex min-w-0 items-center gap-1.5 font-mono text-base font-bold tracking-wider hover:text-blush-700 sm:text-lg"
                       >
-                        {c.code} <Copy className="h-3.5 w-3.5 opacity-40" />
+                        <span className="truncate">{c.code}</span> <Copy className="h-3.5 w-3.5 shrink-0 opacity-40" />
                       </button>
                       <Pill tone={state.tone} dot>{state.label}</Pill>
                     </div>

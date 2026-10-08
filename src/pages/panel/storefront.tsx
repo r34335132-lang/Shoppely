@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, Reorder, motion } from 'framer-motion';
+import { AnimatePresence, Reorder, motion, useDragControls } from 'framer-motion';
 import { toast } from 'sonner';
 import { CalendarClock, ExternalLink, GripVertical, ImagePlus, Loader2, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { useAction, useAdminBanners, useAdminCategories, useAdminProducts } from '@/hooks/admin-queries';
@@ -74,15 +74,14 @@ export default function Storefront() {
           ) : (
             <Reorder.Group axis="y" values={stories} onReorder={setStories} className="space-y-3">
               {stories.map((b) => (
-                <Reorder.Item
+                <StoryItem
                   key={b.id}
-                  value={b}
+                  banner={b}
                   onDragEnd={() => reorder.mutate([...hero, ...stories].map((x) => x.id))}
-                  whileDrag={{ scale: 1.02, boxShadow: '0 24px 50px -20px rgba(20,16,20,0.45)' }}
-                  className="rounded-3xl"
-                >
-                  <BannerCard banner={b} draggable onEdit={() => setEditing(b)} onDelete={() => askDelete(b)} onToggle={(v) => save.mutate({ ...b, active: v })} />
-                </Reorder.Item>
+                  onEdit={() => setEditing(b)}
+                  onDelete={() => askDelete(b)}
+                  onToggle={(v) => save.mutate({ ...b, active: v })}
+                />
               ))}
             </Reorder.Group>
           )}
@@ -95,20 +94,42 @@ export default function Storefront() {
   );
 }
 
-function BannerCard({ banner, big, draggable, onEdit, onDelete, onToggle }: { banner: AdminBanner; big?: boolean; draggable?: boolean; onEdit: () => void; onDelete: () => void; onToggle: (v: boolean) => void }) {
+type BannerActions = { onEdit: () => void; onDelete: () => void; onToggle: (v: boolean) => void };
+
+function StoryItem({ banner, onDragEnd, ...actions }: { banner: AdminBanner; onDragEnd: () => void } & BannerActions) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={banner}
+      dragListener={false}
+      dragControls={controls}
+      onDragEnd={onDragEnd}
+      whileDrag={{ scale: 1.02, boxShadow: '0 24px 50px -20px rgba(20,16,20,0.45)' }}
+      className="rounded-3xl"
+    >
+      <BannerCard banner={banner} onGrab={(e) => controls.start(e)} {...actions} />
+    </Reorder.Item>
+  );
+}
+
+function BannerCard({ banner, big, onGrab, onEdit, onDelete, onToggle }: { banner: AdminBanner; big?: boolean; onGrab?: (e: React.PointerEvent) => void } & BannerActions) {
   const state = scheduleState(banner);
   return (
-    <div className={cn('group relative overflow-hidden rounded-3xl bg-ink', big ? 'aspect-[16/8]' : 'aspect-[16/5]', !banner.active && 'opacity-60')}>
+    <div className={cn('group relative overflow-hidden rounded-3xl bg-ink', big ? 'aspect-[16/9] sm:aspect-[16/8]' : 'aspect-[16/7] sm:aspect-[16/5]', !banner.active && 'opacity-60')}>
       <img src={banner.image_url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" draggable={false} />
       <div className={cn('absolute inset-0 bg-gradient-to-r', themeClass[banner.theme])} />
       <div className="absolute inset-0 flex items-end justify-between gap-3 p-4">
         <div className="min-w-0">
-          {banner.eyebrow && <p className="eyebrow opacity-80">{banner.eyebrow}</p>}
-          <p className={cn('display truncate', big ? 'text-3xl sm:text-4xl' : 'text-2xl')}>{banner.title}</p>
+          {banner.eyebrow && <p className="eyebrow truncate opacity-80">{banner.eyebrow}</p>}
+          <p className={cn('display truncate', big ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl')}>{banner.title}</p>
         </div>
       </div>
       <div className="absolute left-3 top-3 flex items-center gap-2">
-        {draggable && <span className="grid h-9 w-9 cursor-grab place-items-center rounded-full bg-white/90 text-ink active:cursor-grabbing"><GripVertical className="h-4 w-4" /></span>}
+        {onGrab && (
+          <span onPointerDown={onGrab} className="grid h-9 w-9 cursor-grab touch-none place-items-center rounded-full bg-white/90 text-ink active:cursor-grabbing" aria-label="Arrastrar para ordenar">
+            <GripVertical className="h-4 w-4" />
+          </span>
+        )}
         <Pill tone={state.tone} dot className="bg-white/90!">{state.label}</Pill>
       </div>
       <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 p-1 pl-3 backdrop-blur">

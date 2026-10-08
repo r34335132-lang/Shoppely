@@ -137,23 +137,23 @@ function StockList({ initialFilter, onAdjust, onCode }: { initialFilter: StockFi
             {rows.map((r, i) => {
               const tone = r.stock === 0 ? 'red' : r.stock <= r.low_stock_threshold ? 'amber' : 'green';
               return (
-                <motion.li key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i * 0.01, 0.25) }} className="flex items-center gap-3 px-2 py-2.5">
-                  <button type="button" onClick={() => onAdjust(r)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                    <Thumb src={r.product.images[0]} className="h-12 w-12 rounded-xl" />
+                <motion.li key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i * 0.01, 0.25) }} className="flex items-center gap-2 px-1.5 py-2.5 sm:gap-3 sm:px-2">
+                  <button type="button" onClick={() => onAdjust(r)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left sm:gap-3">
+                    <Thumb src={r.product.images[0]} className="h-11 w-11 rounded-xl sm:h-12 sm:w-12" />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{r.product.name}</span>
+                      <span className="line-clamp-2 text-sm font-semibold leading-snug sm:line-clamp-1">{r.product.name}</span>
                       <span className="flex items-center gap-1.5 truncate text-xs text-ink/50">
                         {r.color_hex && <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-ink/10" style={{ background: r.color_hex }} />}
-                        {r.name}{r.sku && <span className="font-mono"> · {r.sku}</span>}
+                        <span className="truncate">{r.name}{r.sku && <span className="hidden font-mono sm:inline"> · {r.sku}</span>}</span>
                       </span>
                     </span>
                   </button>
-                  <div className="flex items-center gap-1.5">
-                    <motion.button whileTap={{ scale: 0.85 }} type="button" disabled={r.stock === 0 || quick.isPending} onClick={() => quick.mutate({ id: r.id, change: -1 })} className="grid h-11 w-11 place-items-center rounded-full bg-ink/[0.05] hover:bg-ink/10 disabled:opacity-30" aria-label="Restar uno"><Minus className="h-4 w-4" /></motion.button>
-                    <motion.span key={r.stock} initial={{ scale: 1.35 }} animate={{ scale: 1 }} className="w-14 text-center">
-                      <Pill tone={tone} className="px-3 text-sm">{r.stock}</Pill>
+                  <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+                    <motion.button whileTap={{ scale: 0.85 }} type="button" disabled={r.stock === 0 || quick.isPending} onClick={() => quick.mutate({ id: r.id, change: -1 })} className="grid h-10 w-10 place-items-center rounded-full bg-ink/[0.05] hover:bg-ink/10 disabled:opacity-30 sm:h-11 sm:w-11" aria-label="Restar uno"><Minus className="h-4 w-4" /></motion.button>
+                    <motion.span key={r.stock} initial={{ scale: 1.35 }} animate={{ scale: 1 }} className="w-11 text-center sm:w-14">
+                      <Pill tone={tone} className="px-2.5 text-sm sm:px-3">{r.stock}</Pill>
                     </motion.span>
-                    <motion.button whileTap={{ scale: 0.85 }} type="button" disabled={quick.isPending} onClick={() => quick.mutate({ id: r.id, change: 1 })} className="grid h-11 w-11 place-items-center rounded-full bg-ink text-white hover:bg-blush-700 disabled:opacity-30" aria-label="Sumar uno"><Plus className="h-4 w-4" /></motion.button>
+                    <motion.button whileTap={{ scale: 0.85 }} type="button" disabled={quick.isPending} onClick={() => quick.mutate({ id: r.id, change: 1 })} className="grid h-10 w-10 place-items-center rounded-full bg-ink text-white hover:bg-blush-700 disabled:opacity-30 sm:h-11 sm:w-11" aria-label="Sumar uno"><Plus className="h-4 w-4" /></motion.button>
                   </div>
                 </motion.li>
               );
@@ -291,12 +291,12 @@ function MovementsList() {
         {isLoading ? <SkeletonRows rows={8} /> : list.length === 0 ? <Empty icon={History} title="Sin movimientos" /> : (
           <ul className="divide-y divide-ink/5">
             {list.map((m) => (
-              <li key={m.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-0.5 px-2 py-3 sm:grid-cols-[110px_1fr_140px_70px_70px]">
-                <span className="row-span-2 sm:row-span-1"><Pill tone={movementTone[m.reason]}>{movementLabel[m.reason]}</Pill></span>
+              <li key={m.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 px-2 py-3 md:grid-cols-[110px_minmax(0,1fr)_150px_60px_60px]">
+                <span className="row-span-2 md:row-span-1"><Pill tone={movementTone[m.reason]}>{movementLabel[m.reason]}</Pill></span>
                 <span className="min-w-0 truncate text-sm"><b>{m.product_name}</b> · {m.variant_name}{m.note && <span className="text-ink/50"> — {m.note}</span>}</span>
-                <span className={cn('text-right text-sm font-bold tabular sm:order-last', m.quantity_change > 0 ? 'text-emerald-600' : 'text-red-600')}>{m.quantity_change > 0 ? '+' : ''}{m.quantity_change}</span>
-                <span className="truncate text-xs text-ink/45 sm:text-right">{new Date(m.created_at).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{m.user_name ? ` · ${m.user_name}` : ''}</span>
-                <span className="hidden text-right text-xs text-ink/45 sm:block">→ {m.stock_after}</span>
+                <span className={cn('text-right text-sm font-bold tabular md:order-last', m.quantity_change > 0 ? 'text-emerald-600' : 'text-red-600')}>{m.quantity_change > 0 ? '+' : ''}{m.quantity_change}</span>
+                <span className="col-start-2 truncate text-xs text-ink/45 md:col-start-auto md:text-right">{new Date(m.created_at).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{m.user_name ? ` · ${m.user_name}` : ''}</span>
+                <span className="hidden text-right text-xs text-ink/45 md:block">→ {m.stock_after}</span>
               </li>
             ))}
           </ul>

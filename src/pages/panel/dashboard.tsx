@@ -105,7 +105,7 @@ function SalesDashboard({ admin }: { admin: boolean }) {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard highlight label={admin ? 'Ventas totales' : 'Mis ventas'} value={stats?.revenue_mxn ?? 0} format="money" delta={pct(stats?.revenue_mxn, prev?.revenue_mxn)} hint="vs. periodo anterior" />
         {admin ? (
           <StatCard label="Ganancia" value={stats?.profit_mxn ?? 0} format="money" delay={0.05} delta={pct(stats?.profit_mxn, prev?.profit_mxn)} hint={<span>Margen <b className="text-ink">{(stats?.margin ?? 0).toFixed(1)}%</b></span>} />
@@ -150,7 +150,7 @@ function SalesDashboard({ admin }: { admin: boolean }) {
         </Card>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card delay={0.2}>
           <CardTitle title="Lo más vendido" subtitle={admin ? 'Top productos del periodo' : 'Lo que más vendiste'} />
           {stats?.top_products.length ? (
@@ -195,7 +195,7 @@ function SalesDashboard({ admin }: { admin: boolean }) {
           )}
         </Card>
 
-        <div className="grid gap-4 lg:col-span-2 xl:col-span-1">
+        <div className="grid gap-4 md:col-span-2 md:grid-cols-2 xl:col-span-1 xl:grid-cols-1">
           <AttentionCard stats={stats} admin={admin} />
           {admin ? (
             <Card delay={0.35} className="bg-ink! text-white ring-0!">
@@ -326,7 +326,7 @@ function InventoryDashboard() {
           </>
         }
       />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard highlight label="Unidades en stock" value={units} hint={`${variants.length} variantes activas`} icon={Boxes} />
         <StatCard label="Productos activos" value={active.length} delay={0.05} hint={`${products.length - active.length} archivados`} icon={Package} />
         <StatCard label="Stock bajo" value={low.length} delay={0.1} hint="por reabastecer" icon={AlertTriangle} />

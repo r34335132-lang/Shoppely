@@ -56,7 +56,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-3 pb-6 pt-1">
         <Link href="~/" onClick={onNavigate}><Logo compact /></Link>
-        <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Panel</span>
+        {!onNavigate && <span className="hidden rounded-full bg-ink px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white xl:inline">Panel</span>}
       </div>
 
       <nav className="no-scrollbar flex-1 space-y-6 overflow-y-auto">
@@ -125,7 +125,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 function PromoCard({ role, onNavigate }: { role: Role | null; onNavigate?: () => void }) {
   const pos = role === 'admin' || role === 'seller';
   return (
-    <div className="relative mt-4 overflow-hidden rounded-[24px] bg-[radial-gradient(120%_120%_at_0%_0%,#8a4a58_0%,#3d2229_55%,#22161a_100%)] p-4 text-white">
+    <div className="relative mt-4 shrink-0 overflow-hidden rounded-[24px] [@media(max-height:820px)]:hidden bg-[radial-gradient(120%_120%_at_0%_0%,#8a4a58_0%,#3d2229_55%,#22161a_100%)] p-4 text-white">
       <Sparkle className="absolute right-4 top-4 h-4 w-4 animate-twinkle" />
       <Sparkle className="absolute bottom-14 right-10 h-2.5 w-2.5 animate-twinkle [animation-delay:600ms]" />
       <motion.div
@@ -154,21 +154,22 @@ function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void
   const isMac = typeof navigator !== 'undefined' && /Mac|iPad|iPhone/.test(navigator.platform);
 
   return (
-    <header className="flex h-[72px] shrink-0 items-center gap-3 px-4 sm:px-6 lg:px-8">
-      <button type="button" onClick={onMenu} className="grid h-11 w-11 place-items-center rounded-full bg-white ring-1 ring-ink/5 lg:hidden" aria-label="Abrir menú">
+    <header className="flex h-16 shrink-0 items-center gap-2 px-3 sm:h-[72px] sm:gap-3 sm:px-6 xl:px-8">
+      <button type="button" onClick={onMenu} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white ring-1 ring-ink/5 lg:hidden" aria-label="Abrir menú">
         <Menu className="h-5 w-5" />
       </button>
       <button
         type="button"
         onClick={onSearch}
-        className="flex h-11 flex-1 items-center gap-3 rounded-full bg-white px-4 text-left text-sm text-ink/40 ring-1 ring-ink/5 transition hover:ring-ink/15 sm:max-w-md"
+        className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-full bg-white px-4 text-left text-sm text-ink/40 ring-1 ring-ink/5 transition hover:ring-ink/15 sm:max-w-md"
       >
-        <Search className="h-4 w-4" />
-        <span className="flex-1 truncate">Buscar páginas, productos o pedidos…</span>
-        <kbd className="hidden rounded-lg bg-ink/[0.06] px-2 py-0.5 text-[11px] font-semibold text-ink/50 sm:block">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+        <Search className="h-4 w-4 shrink-0" />
+        <span className="flex-1 truncate sm:hidden">Buscar…</span>
+        <span className="hidden flex-1 truncate sm:block">Buscar páginas, productos o pedidos…</span>
+        <kbd className="hidden rounded-lg bg-ink/[0.06] px-2 py-0.5 text-[11px] font-semibold text-ink/50 lg:block">{isMac ? '⌘' : 'Ctrl'} K</kbd>
       </button>
-      <div className="ml-auto flex items-center gap-2">
-        {isDemo && <span className="hidden rounded-full bg-amber-100 px-3 py-1.5 text-[11px] font-bold text-amber-800 md:block">Modo demo</span>}
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        {isDemo && <span className="hidden rounded-full bg-amber-100 px-3 py-1.5 text-[11px] font-bold text-amber-800 xl:block">Modo demo</span>}
         <Link
           href={role === 'admin' || role === 'seller' ? '/pedidos' : '/inventario'}
           className="relative grid h-11 w-11 place-items-center rounded-full bg-white ring-1 ring-ink/5 transition hover:ring-ink/15"
@@ -182,9 +183,9 @@ function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void
             </span>
           )}
         </Link>
-        <div className="flex items-center gap-3 rounded-full bg-white py-1 pl-1 pr-1 ring-1 ring-ink/5 sm:pr-4">
+        <div className="flex items-center gap-3 rounded-full bg-white py-0.5 pl-0.5 pr-0.5 ring-1 ring-ink/5 md:py-1 md:pl-1 md:pr-4">
           <Avatar name={profile?.full_name} />
-          <div className="hidden leading-tight sm:block">
+          <div className="hidden leading-tight md:block">
             <p className="max-w-[160px] truncate text-sm font-bold">{profile?.full_name}</p>
             <p className="text-[11px] text-ink/50">{role && roleLabel[role]}</p>
           </div>
@@ -244,10 +245,10 @@ export default function PanelLayout() {
 
   return (
     <ConfirmProvider>
-      <div className="relative h-dvh overflow-hidden bg-[#22161a] lg:p-3">
+      <div className="relative h-dvh overflow-hidden bg-[#22161a] pt-[env(safe-area-inset-top)] lg:p-3">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_500px_at_0%_0%,#6b3b47_0%,transparent_60%),radial-gradient(700px_500px_at_100%_100%,#5d4a7a_0%,transparent_55%)] opacity-90" />
         <div className="relative mx-auto flex h-full max-w-[1720px] overflow-hidden bg-[#f7f2ee] lg:rounded-[30px] lg:shadow-[0_40px_120px_-40px_rgba(0,0,0,0.7)]">
-          <aside className="hidden w-[264px] shrink-0 border-r border-ink/[0.05] bg-[#f1e9e3] p-4 lg:block">
+          <aside className="hidden w-[236px] shrink-0 border-r border-ink/[0.05] bg-[#f1e9e3] p-4 lg:block xl:w-[264px]">
             <SidebarContent />
           </aside>
 
@@ -256,7 +257,7 @@ export default function PanelLayout() {
               <div className="fixed inset-0 z-[70] lg:hidden">
                 <motion.div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMenuOpen(false)} />
                 <motion.aside
-                  className="absolute inset-y-0 left-0 w-[290px] bg-[#f1e9e3] p-4 shadow-2xl"
+                  className="absolute inset-y-0 left-0 w-[min(290px,85vw)] bg-[#f1e9e3] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] shadow-2xl"
                   initial={{ x: '-100%' }}
                   animate={{ x: 0 }}
                   exit={{ x: '-100%' }}
@@ -273,7 +274,7 @@ export default function PanelLayout() {
 
           <div className="flex min-w-0 flex-1 flex-col">
             <Topbar onMenu={() => setMenuOpen(true)} onSearch={() => setPaletteOpen(true)} />
-            <main ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 pb-12 pt-2 sm:px-6 lg:px-8">
+            <main ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-3 pb-[max(3rem,env(safe-area-inset-bottom))] pt-2 sm:px-6 xl:px-8">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location}

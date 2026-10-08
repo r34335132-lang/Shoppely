@@ -124,9 +124,9 @@ function CurrentSession({ session, onMove, onClose }: { session: CashSession; on
           <Mini label="Fondo" value={money(session.opening_mxn)} />
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2">
-          <button type="button" onClick={() => onMove('in')} className="pbtn bg-white/10 text-white hover:bg-white/20"><ArrowDownLeft className="h-4 w-4" /> Entrada</button>
-          <button type="button" onClick={() => onMove('out')} className="pbtn bg-white/10 text-white hover:bg-white/20"><ArrowUpRight className="h-4 w-4" /> Salida</button>
-          <button type="button" onClick={onClose} className="pbtn bg-blush-400 text-ink hover:bg-blush-300"><Lock className="h-4 w-4" /> Corte</button>
+          <button type="button" onClick={() => onMove('in')} className="pbtn gap-1.5! bg-white/10 px-2! text-white hover:bg-white/20 sm:gap-2! sm:px-5!"><ArrowDownLeft className="h-4 w-4" /> Entrada</button>
+          <button type="button" onClick={() => onMove('out')} className="pbtn gap-1.5! bg-white/10 px-2! text-white hover:bg-white/20 sm:gap-2! sm:px-5!"><ArrowUpRight className="h-4 w-4" /> Salida</button>
+          <button type="button" onClick={onClose} className="pbtn gap-1.5! bg-blush-400 px-2! text-ink hover:bg-blush-300 sm:gap-2! sm:px-5!"><Lock className="h-4 w-4" /> Corte</button>
         </div>
       </Card>
       <Card delay={0.05}>
@@ -155,9 +155,9 @@ function CurrentSession({ session, onMove, onClose }: { session: CashSession; on
 }
 
 const Mini = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-2xl bg-white/[0.07] p-3">
+  <div className="min-w-0 rounded-2xl bg-white/[0.07] p-2.5 sm:p-3">
     <p className="text-[11px] text-white/50">{label}</p>
-    <p className="truncate text-base font-bold">{value}</p>
+    <p className="text-sm font-bold leading-tight tabular [overflow-wrap:anywhere] sm:text-base">{value}</p>
   </div>
 );
 
@@ -188,11 +188,11 @@ function SessionSheet({ session, onClose }: { session: CashSession | null; onClo
               {orders.length === 0 && <li className="py-4 text-sm text-ink/50">Sin ventas</li>}
               {orders.map((o) => (
                 <li key={o.id}>
-                  <Link href={`/pedidos?id=${o.id}`} onClick={onClose} className="flex items-center gap-3 py-2.5 text-sm">
+                  <Link href={`/pedidos?id=${o.id}`} onClick={onClose} className="flex items-center gap-2 py-2.5 text-sm sm:gap-3">
                     <b>#{o.folio}</b>
-                    <span className="text-ink/50">{time(o.created_at)} · {paymentMethodLabel[o.payment_method]}</span>
-                    <span className="ml-auto">{o.status === 'cancelled' && <StatusPill status={o.status} />}</span>
-                    <b className="tabular">{money(o.total, o.currency)}</b>
+                    <span className="min-w-0 truncate text-ink/50">{time(o.created_at)} · {paymentMethodLabel[o.payment_method]}</span>
+                    <span className="ml-auto shrink-0">{o.status === 'cancelled' && <StatusPill status={o.status} />}</span>
+                    <b className="shrink-0 tabular">{money(o.total, o.currency)}</b>
                   </Link>
                 </li>
               ))}

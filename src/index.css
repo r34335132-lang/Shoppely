@@ -116,7 +116,7 @@
 @utility pbtn-danger { @apply pbtn bg-red-50 text-red-700 hover:bg-red-100; }
 @utility pfield { @apply h-11 w-full rounded-xl border border-ink/10 bg-white px-3.5 text-[15px] outline-none transition placeholder:text-ink/35 focus:border-blush-500 focus:ring-4 focus:ring-blush-100 disabled:bg-ink/[0.03]; }
 @utility plabel { @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/50; }
-@utility pcard { @apply rounded-[26px] bg-white p-5 ring-1 ring-ink/[0.05] shadow-[0_1px_2px_rgba(20,16,20,0.04),0_12px_32px_-18px_rgba(20,16,20,0.18)]; }
+@utility pcard { @apply rounded-[22px] bg-white p-4 ring-1 sm:rounded-[26px] sm:p-5 ring-ink/[0.05] shadow-[0_1px_2px_rgba(20,16,20,0.04),0_12px_32px_-18px_rgba(20,16,20,0.18)]; }
 @utility tabular { font-variant-numeric: tabular-nums; }
 @utility no-scrollbar {
   scrollbar-width: none;

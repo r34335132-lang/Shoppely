@@ -24,9 +24,9 @@ function TrendTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   );
 }
 
-export function RevenueArea({ data, height = 260 }: { data: TrendPoint[]; height?: number }) {
+export function RevenueArea({ data, height }: { data: TrendPoint[]; height?: number }) {
   return (
-    <div style={{ height }} className="-mx-2">
+    <div style={height ? { height } : undefined} className={cn('-mx-2', !height && 'h-[200px] sm:h-[260px]')}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 8, left: 8, bottom: 0 }}>
           <defs>

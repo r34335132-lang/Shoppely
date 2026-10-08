@@ -31,7 +31,7 @@ export default function Team() {
     <>
       <PageHeader eyebrow="General" title="Equipo" subtitle="Asigna quién puede vender, manejar inventario o administrar la tienda." />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {roles.map((r, i) => {
           const info = roleInfo[r];
           return (
@@ -84,22 +84,24 @@ function MemberRow({ member: m, self }: { member: TeamMember; self: boolean }) {
   };
 
   return (
-    <li className={cn('flex flex-wrap items-center gap-3 px-1 py-3', !m.active && 'opacity-55')}>
+    <li className={cn('flex flex-wrap items-center gap-x-3 gap-y-2 px-1 py-3', !m.active && 'opacity-55')}>
       <Avatar name={m.full_name} />
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 truncate font-semibold">{m.full_name ?? 'Sin nombre'} {self && <Pill tone="pink">Tú</Pill>}</p>
+        <p className="flex min-w-0 items-center gap-2 font-semibold"><span className="truncate">{m.full_name ?? 'Sin nombre'}</span> {self && <Pill tone="pink">Tú</Pill>}</p>
         <p className="truncate text-xs text-ink/50">{[m.email, m.phone].filter(Boolean).join(' · ')}</p>
       </div>
-      <select
-        value={m.role}
-        disabled={self || update.isPending}
-        onChange={(e) => changeRole(e.target.value as Role)}
-        className="pfield h-10! w-auto! min-w-[150px] rounded-full! font-semibold"
-        aria-label="Rol"
-      >
-        {roles.map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
-      </select>
-      <Switch size="sm" checked={m.active} disabled={self} onChange={(active) => update.mutate({ active })} label={<span className="hidden w-16 text-xs sm:inline">{m.active ? 'Activo' : 'Bloqueado'}</span>} />
+      <div className="flex w-full items-center gap-3 pl-[52px] sm:w-auto sm:pl-0">
+        <select
+          value={m.role}
+          disabled={self || update.isPending}
+          onChange={(e) => changeRole(e.target.value as Role)}
+          className="pfield h-10! min-w-0 flex-1 rounded-full! font-semibold sm:w-auto! sm:min-w-[150px] sm:flex-none"
+          aria-label="Rol"
+        >
+          {roles.map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
+        </select>
+        <Switch size="sm" checked={m.active} disabled={self} onChange={(active) => update.mutate({ active })} label={<span className="w-16 text-xs">{m.active ? 'Activo' : 'Bloqueado'}</span>} />
+      </div>
     </li>
   );
 }

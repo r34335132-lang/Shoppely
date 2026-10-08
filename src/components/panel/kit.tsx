@@ -107,7 +107,7 @@ export function StatCard({
       onClick={onClick}
       disabled={!onClick}
       className={cn(
-        'group relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-[26px] p-5 text-left disabled:cursor-default',
+        'group relative flex min-h-[124px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-[22px] p-4 text-left disabled:cursor-default sm:min-h-[148px] sm:rounded-[26px] sm:p-5',
         highlight
           ? 'bg-[linear-gradient(140deg,var(--color-blush-400)_0%,var(--color-blush-600)_45%,#4e2531_100%)] text-white shadow-[0_18px_40px_-18px_rgba(135,68,82,0.8)]'
           : 'pcard',
@@ -124,18 +124,18 @@ export function StatCard({
           <span className="pointer-events-none absolute -bottom-16 left-10 h-40 w-40 rounded-full bg-lilac-300/30 blur-2xl" />
         </>
       )}
-      <div className="relative flex items-start justify-between gap-3">
-        <p className={cn('text-sm font-semibold', highlight ? 'text-white/90' : 'text-ink/70')}>{label}</p>
+      <div className="relative flex items-start justify-between gap-2 sm:gap-3">
+        <p className={cn('text-[13px] font-semibold leading-snug sm:text-sm', highlight ? 'text-white/90' : 'text-ink/70')}>{label}</p>
         <span className={cn(
-          'grid h-9 w-9 shrink-0 place-items-center rounded-full border transition duration-300 group-hover:rotate-45',
+          'grid h-8 w-8 shrink-0 place-items-center rounded-full border transition duration-300 group-hover:rotate-45 sm:h-9 sm:w-9',
           highlight ? 'border-white/40 bg-white text-blush-700' : 'border-ink/10 bg-white text-ink',
         )}>
           {Icon ? <Icon className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
         </span>
       </div>
-      <div className="relative">
-        <CountUp value={value} format={format} className="block text-[30px] font-bold leading-none tracking-tight sm:text-[34px]" />
-        <div className={cn('mt-2.5 flex flex-wrap items-center gap-2 text-xs', highlight ? 'text-white/80' : 'text-ink/50')}>
+      <div className="@container relative">
+        <CountUp value={value} format={format} className="block whitespace-nowrap text-[length:clamp(18px,14cqw,34px)] font-bold leading-none tracking-tight" />
+        <div className={cn('mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:mt-2.5 sm:text-xs', highlight ? 'text-white/80' : 'text-ink/50')}>
           <Delta value={delta} light={highlight} />
           {hint}
         </div>
@@ -376,7 +376,7 @@ export function Sheet({
             exit={{ x: '105%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 34 }}
           >
-            <header className="flex items-start justify-between gap-4 border-b border-ink/5 px-5 py-4 sm:px-6">
+            <header className="flex items-start justify-between gap-4 border-b border-ink/5 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-4">
               <div className="min-w-0">
                 <h2 className="truncate text-xl font-bold tracking-tight">{title}</h2>
                 {subtitle && <div className="mt-0.5 text-sm text-ink/55">{subtitle}</div>}
@@ -385,8 +385,8 @@ export function Sheet({
                 <X className="h-4 w-4" />
               </button>
             </header>
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">{children}</div>
-            {footer && <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-ink/5 bg-white/70 px-5 py-4 sm:rounded-b-[28px] sm:px-6">{footer}</footer>}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-5">{children}</div>
+            {footer && <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-ink/5 bg-white/70 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:rounded-b-[28px] sm:px-6 sm:pb-4">{footer}</footer>}
           </motion.aside>
         </div>
       )}
@@ -421,8 +421,8 @@ export function Modal({
             transition={{ type: 'spring', stiffness: 340, damping: 30 }}
           >
             {title && (
-              <header className="flex items-center justify-between gap-4 px-6 pb-2 pt-5">
-                <h2 className="text-xl font-bold tracking-tight">{title}</h2>
+              <header className="flex items-center justify-between gap-4 px-5 pb-2 pt-5 sm:px-6">
+                <h2 className="min-w-0 text-xl font-bold tracking-tight">{title}</h2>
                 {dismissable && (
                   <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-white ring-1 ring-ink/10 transition hover:rotate-90" aria-label="Cerrar">
                     <X className="h-4 w-4" />
@@ -430,8 +430,8 @@ export function Modal({
                 )}
               </header>
             )}
-            <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4">{children}</div>
-            {footer && <footer className="flex flex-wrap items-center justify-end gap-2 px-6 pb-6 pt-2">{footer}</footer>}
+            <div className={cn('flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6', !footer && 'pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-4')}>{children}</div>
+            {footer && <footer className="flex flex-wrap items-center justify-end gap-2 px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-6 sm:pb-6">{footer}</footer>}
           </motion.div>
         </div>
       )}

@@ -473,14 +473,14 @@ function EditorBody({ product, onDone }: { product: AdminProduct | undefined; on
                   </div>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     <Field label="Talla / tamaño"><input value={v.size} onChange={(e) => setVariant(v.key, { size: e.target.value })} className="pfield" placeholder="M, 30 ml…" /></Field>
-                    <Field label="Color / tono">
+                    <Field label="SKU"><input value={v.sku} onChange={(e) => setVariant(v.key, { sku: e.target.value.toUpperCase() })} className="pfield font-mono" placeholder="BLU-LIN-M" /></Field>
+                    <Field label="Color / tono" className="col-span-2 sm:col-span-1">
                       <div className="flex gap-2">
                         <input value={v.color} onChange={(e) => setVariant(v.key, { color: e.target.value })} className="pfield" placeholder="Rosa nude" />
                         <input type="color" value={v.color_hex || '#f4c2d4'} onChange={(e) => setVariant(v.key, { color_hex: e.target.value })} className="h-11 w-11 shrink-0 cursor-pointer rounded-xl border border-ink/10 bg-white p-1" aria-label="Color" />
                       </div>
                     </Field>
-                    <Field label="SKU"><input value={v.sku} onChange={(e) => setVariant(v.key, { sku: e.target.value.toUpperCase() })} className="pfield font-mono" placeholder="BLU-LIN-M" /></Field>
-                    <Field label="Código de barras">
+                    <Field label="Código de barras" className="col-span-2 sm:col-span-1">
                       <div className="flex gap-2">
                         <input value={v.barcode} onChange={(e) => setVariant(v.key, { barcode: e.target.value.replace(/\s/g, '') })} className="pfield font-mono" placeholder="Escanéalo aquí" inputMode="numeric" />
                         <button type="button" onClick={() => setVariant(v.key, { barcode: generateEan13() })} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-ink/[0.05] hover:bg-ink/10" title="Generar código" aria-label="Generar código"><Barcode className="h-4 w-4" /></button>
@@ -489,7 +489,7 @@ function EditorBody({ product, onDone }: { product: AdminProduct | undefined; on
                     {v.id ? (
                       <div>
                         <span className="plabel">Stock</span>
-                        <p className="flex h-11 items-center gap-2 rounded-xl bg-ink/[0.03] px-3.5 text-[15px] font-bold">{v.currentStock} <span className="text-xs font-normal text-ink/45">· ajústalo en Inventario</span></p>
+                        <p className="flex h-11 items-center gap-2 rounded-xl bg-ink/[0.03] px-3.5 text-[15px] font-bold">{v.currentStock} <span className="truncate text-xs font-normal text-ink/45">· en Inventario</span></p>
                       </div>
                     ) : (
                       <Field label="Stock inicial"><input value={v.stock} onChange={(e) => setVariant(v.key, { stock: e.target.value.replace(/\D/g, '') })} className="pfield" inputMode="numeric" /></Field>
@@ -519,10 +519,10 @@ function EditorBody({ product, onDone }: { product: AdminProduct | undefined; on
         </div>
       </Section>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 flex items-center gap-2 border-t border-ink/5 bg-white/90 px-5 py-4 backdrop-blur sm:absolute sm:rounded-b-[28px] sm:px-6">
+      <div className="fixed inset-x-0 bottom-0 z-10 flex items-center gap-2 border-t border-ink/5 bg-white/90 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:absolute sm:rounded-b-[28px] sm:px-6 sm:pb-4">
         {product && <button type="button" className="pbtn-danger" onClick={askDelete} disabled={remove.isPending}><Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Eliminar</span></button>}
         <button type="button" className="pbtn-ghost ml-auto" onClick={onDone}>Cancelar</button>
-        <button type="button" className="pbtn-pink min-w-[150px]" onClick={submit} disabled={save.isPending || uploading > 0}>
+        <button type="button" className="pbtn-pink sm:min-w-[150px]" onClick={submit} disabled={save.isPending || uploading > 0}>
           {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} {product ? 'Guardar cambios' : 'Crear producto'}
         </button>
       </div>
@@ -598,8 +598,8 @@ function Categories() {
 
   return (
     <Card className="p-3! sm:p-4!">
-      <div className="mb-2 flex items-center justify-between px-2 pt-1">
-        <p className="text-sm text-ink/55">{categories?.length ?? 0} categorías · El orden es el de la tienda</p>
+      <div className="mb-2 flex items-center justify-between gap-3 px-2 pt-1">
+        <p className="text-sm text-ink/55">{categories?.length ?? 0} categorías<span className="hidden sm:inline"> · El orden es el de la tienda</span></p>
         <button type="button" className="pbtn-pink" onClick={() => setEditing({ name: '', active: true })}><Plus className="h-4 w-4" /> Nueva</button>
       </div>
       {isLoading ? <SkeletonRows /> : !categories?.length ? (
@@ -607,14 +607,14 @@ function Categories() {
       ) : (
         <ul className="divide-y divide-ink/5">
           {categories.map((c, i) => (
-            <motion.li key={c.id} layout className="flex items-center gap-3 px-2 py-3">
-              {c.image_url ? <img src={c.image_url} alt="" className="h-14 w-14 rounded-2xl object-cover" /> : <span className="grid h-14 w-14 place-items-center rounded-2xl bg-blush-50 text-blush-400"><FolderOpen className="h-5 w-5" /></span>}
+            <motion.li key={c.id} layout className="flex flex-wrap items-center gap-x-3 gap-y-1 px-2 py-3 sm:flex-nowrap">
+              {c.image_url ? <img src={c.image_url} alt="" className="h-12 w-12 shrink-0 rounded-2xl object-cover sm:h-14 sm:w-14" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blush-50 text-blush-400 sm:h-14 sm:w-14"><FolderOpen className="h-5 w-5" /></span>}
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{c.name}</p>
                 <p className="truncate text-xs text-ink/50">{count(c.id)} productos · /{c.slug}</p>
               </div>
-              <Switch size="sm" checked={c.active} onChange={(v) => save.mutate({ ...c, active: v })} label={<span className="hidden text-xs sm:inline">{c.active ? 'Visible' : 'Oculta'}</span>} />
-              <div className="flex">
+              <Switch size="sm" checked={c.active} onChange={(v) => save.mutate({ ...c, active: v })} label={<span className="text-xs">{c.active ? 'Visible' : 'Oculta'}</span>} />
+              <div className="ml-auto flex w-full justify-end sm:ml-0 sm:w-auto">
                 <button type="button" disabled={i === 0 || move.isPending} onClick={() => move.mutate({ a: c, b: categories[i - 1] })} className="grid h-9 w-9 place-items-center rounded-full hover:bg-ink/5 disabled:opacity-30" aria-label="Subir"><ArrowUp className="h-4 w-4" /></button>
                 <button type="button" disabled={i === categories.length - 1 || move.isPending} onClick={() => move.mutate({ a: c, b: categories[i + 1] })} className="grid h-9 w-9 place-items-center rounded-full hover:bg-ink/5 disabled:opacity-30" aria-label="Bajar"><ArrowDown className="h-4 w-4" /></button>
                 <button type="button" onClick={() => setEditing(c)} className="grid h-9 w-9 place-items-center rounded-full hover:bg-ink/5" aria-label="Editar"><Pencil className="h-4 w-4" /></button>
