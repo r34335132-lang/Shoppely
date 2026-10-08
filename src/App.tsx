@@ -42,7 +42,9 @@ function Routes() {
         <Route path="/"><StoreLayout><HomePage /></StoreLayout></Route>
         <Route path="/tienda"><StoreLayout><CatalogPage /></StoreLayout></Route>
         <Route path="/producto/:slug"><StoreLayout><ProductPage /></StoreLayout></Route>
-        <Route path="/checkout"><StoreLayout footer={false}><CheckoutPage /></StoreLayout></Route>
+        <Route path="/checkout">
+          <RequireRole><StoreLayout footer={false}><CheckoutPage /></StoreLayout></RequireRole>
+        </Route>
         <Route path="/pedido/:token"><StoreLayout><OrderPage /></StoreLayout></Route>
         <Route path="/cuenta">
           <RequireRole><StoreLayout><AccountPage /></StoreLayout></RequireRole>

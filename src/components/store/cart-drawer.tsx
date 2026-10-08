@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Trash2, Truck, X } from 'lucide-react';
+import { useAuth } from '@/providers/auth';
 import { useCart } from '@/providers/cart';
 import { useCurrency } from '@/providers/currency';
 import { useSettings } from '@/hooks/queries';
@@ -10,6 +11,7 @@ import { lockScroll } from '@/lib/smooth-scroll';
 
 export function CartDrawer() {
   const { lines, isOpen, close, subtotal, setQty, remove, linePrice } = useCart();
+  const { profile } = useAuth();
   const { format, currency, rate } = useCurrency();
   const { data: settings } = useSettings();
   const [location] = useLocation();
@@ -122,7 +124,9 @@ export function CartDrawer() {
                   <span className="text-ink/60">Subtotal</span>
                   <span className="text-xl font-bold">{format(subtotal)}</span>
                 </div>
-                <p className="mt-1 text-xs text-ink/45">Envío y cupones se calculan al pagar.</p>
+                <p className="mt-1 text-xs text-ink/45">
+                  Envío y cupones se calculan al pagar.{!profile && ' Te pediremos iniciar sesión para guardar tu pedido.'}
+                </p>
                 <Link href="/checkout" onClick={close} className="btn-dark mt-4 w-full py-4 text-base">
                   Pagar ahora
                 </Link>

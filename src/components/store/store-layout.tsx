@@ -4,6 +4,7 @@ import { Header } from './header';
 import { Footer } from './footer';
 import { SearchOverlay } from './search-overlay';
 import { WhatsAppFab } from './social';
+import { PendingPaymentReminder } from './pending-payment';
 import { Intro } from '@/components/brand/intro';
 import { PageLoader } from '@/components/page-loader';
 import { scrollToTop, startSmoothScroll, stopSmoothScroll } from '@/lib/smooth-scroll';
@@ -39,6 +40,7 @@ export function StoreLayout({ children, footer = true }: { children: ReactNode; 
       {footer && <Footer />}
       <SearchOverlay open={searchOpen} onClose={closeSearch} />
       <WhatsAppFab />
+      <PendingPaymentReminder ready={introDone} />
     </IntroContext.Provider>
   );
 }

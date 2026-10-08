@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { motion } from 'framer-motion';
-import { Heart, LayoutDashboard, LogOut, Package } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Clock, Heart, LayoutDashboard, LogOut, Package } from 'lucide-react';
 import { useAuth } from '@/providers/auth';
-import { useMyOrders, useProducts } from '@/hooks/queries';
+import { awaitingPayment, useMyOrders, useProducts } from '@/hooks/queries';
 import { ProductCard, useFavorites } from '@/components/store/product-card';
-import { formatDate, money, orderStatusLabel, paymentStatusLabel } from '@/lib/format';
+import { PayNowButton, pendingTitle } from '@/components/store/pending-payment';
+import { formatDate, money, orderStatusLabel, paymentMethodLabel, paymentStatusLabel } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export default function AccountPage() {
@@ -15,6 +16,7 @@ export default function AccountPage() {
   const { ids } = useFavorites();
   const { data: products = [] } = useProducts();
   const favorites = products.filter((p) => ids.includes(p.id));
+  const pending = orders.filter(awaitingPayment);
 
   if (!profile) return null;
 
@@ -32,6 +34,37 @@ export default function AccountPage() {
             <button type="button" onClick={() => void signOut()} className="btn-outline"><LogOut className="h-4 w-4" /> Salir</button>
           </div>
         </div>
+
+        <AnimatePresence initial={false}>
+          {pending.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-10 overflow-hidden rounded-[32px] bg-ink p-5 text-white sm:p-7"
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-blush-400 text-ink"><Clock className="h-5 w-5" /></span>
+                <div>
+                  <p className="text-lg font-semibold">{pending.length === 1 ? 'Tienes un pago pendiente' : `Tienes ${pending.length} pagos pendientes`}</p>
+                  <p className="text-sm text-white/60">Preparamos tu pedido en cuanto recibamos tu pago.</p>
+                </div>
+              </div>
+              <ul className="mt-5 flex flex-col gap-2">
+                {pending.map((o) => (
+                  <li key={o.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white/[0.07] p-3 pl-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">{pendingTitle(o)}</p>
+                      <p className="text-xs text-white/55">{formatDate(o.created_at)} · {paymentMethodLabel[o.payment_method]} · <b className="text-white">{money(o.total, o.currency)}</b></p>
+                    </div>
+                    <Link href={`/pedido/${o.public_token}`} className="px-2 text-sm font-semibold text-white/70 hover:text-white">Ver pedido</Link>
+                    <PayNowButton order={o} className="btn-pink py-2.5!" />
+                  </li>
+                ))}
+              </ul>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         <div className="mt-10 flex w-fit gap-1 rounded-full bg-white p-1">
           {([['orders', 'Pedidos', Package], ['favorites', 'Favoritos', Heart]] as const).map(([value, label, Icon]) => (
@@ -65,7 +98,9 @@ export default function AccountPage() {
                     <p className="font-bold">{money(o.total, o.currency)}</p>
                     <p className="text-xs">
                       <span className="rounded-full bg-blush-100 px-2 py-0.5 font-semibold">{orderStatusLabel[o.status]}</span>{' '}
-                      <span className="text-ink/50">{paymentStatusLabel[o.payment_status]}</span>
+                      {awaitingPayment(o)
+                        ? <span className="rounded-full bg-berry-500 px-2 py-0.5 font-semibold text-white">{o.payment_status === 'failed' ? 'Pago no completado' : 'Falta pagar'}</span>
+                        : <span className="text-ink/50">{paymentStatusLabel[o.payment_status]}</span>}
                     </p>
                   </div>
                 </Link>

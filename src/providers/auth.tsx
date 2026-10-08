@@ -10,7 +10,7 @@ interface AuthContextValue {
   role: Role | null;
   isStaff: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (input: { email: string; password: string; fullName: string; phone?: string }) => Promise<{ needsConfirmation: boolean }>;
+  signUp: (input: { email: string; password: string; fullName: string; phone?: string; redirectPath?: string }) => Promise<{ needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   signInDemo: (role: Role) => void;
   refreshProfile: () => Promise<void>;
@@ -86,12 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw new Error(error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos' : error.message);
       },
-      async signUp({ email, password, fullName, phone }) {
+      async signUp({ email, password, fullName, phone, redirectPath }) {
         if (!supabase) throw new Error('El registro se activa al conectar Supabase.');
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName, phone }, emailRedirectTo: window.location.origin },
+          options: { data: { full_name: fullName, phone }, emailRedirectTo: window.location.origin + (redirectPath ?? '') },
         });
         if (error) throw new Error(error.message);
         return { needsConfirmation: !data.session };

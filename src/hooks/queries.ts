@@ -4,6 +4,8 @@ import {
   fetchSettings, type ProductFilters,
 } from '@/lib/api';
 import { demoSettings } from '@/lib/demo-data';
+import type { OrderSummary } from '@/lib/types';
+import { useAuth } from '@/providers/auth';
 
 export const useSettings = () =>
   useQuery({ queryKey: ['settings'], queryFn: fetchSettings, staleTime: 5 * 60_000, placeholderData: demoSettings });
@@ -23,8 +25,21 @@ export const useBanners = () =>
 export const useReviews = (productId: string | null, limit?: number) =>
   useQuery({ queryKey: ['reviews', productId, limit], queryFn: () => fetchReviews(productId, limit) });
 
-export const useOrderByToken = (token: string) =>
-  useQuery({ queryKey: ['order', token], queryFn: () => fetchOrderByToken(token), enabled: !!token, refetchInterval: 15_000 });
+/** `fast`: al volver de Mercado Pago el webhook tarda unos segundos en marcar el pago. */
+export const useOrderByToken = (token: string, fast = false) =>
+  useQuery({ queryKey: ['order', token], queryFn: () => fetchOrderByToken(token), enabled: !!token, refetchInterval: fast ? 4_000 : 15_000 });
 
 export const useMyOrders = (userId: string | null | undefined) =>
-  useQuery({ queryKey: ['my-orders', userId], queryFn: () => fetchMyOrders(userId!), enabled: !!userId });
+  useQuery({ queryKey: ['my-orders', userId], queryFn: () => fetchMyOrders(userId!), enabled: !!userId, refetchInterval: 60_000 });
+
+/** Pedidos en línea que la clienta todavía tiene que pagar (el efectivo se paga al entregar, no se recuerda). */
+export const awaitingPayment = (o: Pick<OrderSummary, 'status' | 'payment_status' | 'payment_method'>) =>
+  o.status !== 'cancelled'
+  && (o.payment_status === 'pending' || o.payment_status === 'failed')
+  && (o.payment_method === 'mercadopago' || o.payment_method === 'transfer');
+
+export function usePendingPayments() {
+  const { profile } = useAuth();
+  const { data = [] } = useMyOrders(profile?.id);
+  return data.filter(awaitingPayment);
+}

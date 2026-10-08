@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useSearch } from 'wouter';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Boxes, Crown, Loader2, ShoppingBag, User } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,16 +16,23 @@ const demoRoles: { role: Role; label: string; icon: typeof Crown }[] = [
   { role: 'customer', label: 'Cliente', icon: User },
 ];
 
+/** Solo rutas internas, para que ?next= no pueda mandar a otro sitio. */
+function safeNext(raw: string | null) {
+  return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : null;
+}
+
 export default function LoginPage({ mode: initialMode = 'in' }: { mode?: 'in' | 'up' }) {
   const { signIn, signUp, signInDemo, profile, isStaff } = useAuth();
   const [, navigate] = useLocation();
+  const next = safeNext(new URLSearchParams(useSearch()).get('next'));
+  const fromCheckout = next?.startsWith('/checkout') ?? false;
   const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' });
 
   useEffect(() => {
-    if (profile) navigate(isStaff ? '/panel' : '/cuenta');
-  }, [profile, isStaff, navigate]);
+    if (profile) navigate(next ?? (isStaff ? '/panel' : '/cuenta'), { replace: true });
+  }, [profile, isStaff, next, navigate]);
 
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -36,8 +43,12 @@ export default function LoginPage({ mode: initialMode = 'in' }: { mode?: 'in' | 
       if (mode === 'in') {
         await signIn(form.email, form.password);
       } else {
-        const { needsConfirmation } = await signUp({ email: form.email, password: form.password, fullName: form.name, phone: form.phone });
-        if (needsConfirmation) toast.success('Revisa tu correo para confirmar tu cuenta 💌');
+        const { needsConfirmation } = await signUp({ email: form.email, password: form.password, fullName: form.name, phone: form.phone, redirectPath: next ?? undefined });
+        if (needsConfirmation) {
+          toast.success(fromCheckout
+            ? 'Revisa tu correo para confirmar tu cuenta 💌 Tu bolsa se queda guardada.'
+            : 'Revisa tu correo para confirmar tu cuenta 💌');
+        }
       }
     } catch (err) {
       toast.error((err as Error).message);
@@ -67,6 +78,15 @@ export default function LoginPage({ mode: initialMode = 'in' }: { mode?: 'in' | 
 
       <div className="flex flex-col justify-center px-6 py-16 sm:px-16">
         <Link href="/" className="mb-10 w-fit"><Logo /></Link>
+
+        {fromCheckout && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex max-w-md items-start gap-3 rounded-3xl bg-blush-100 p-4">
+            <ShoppingBag className="mt-0.5 h-5 w-5 shrink-0 text-blush-700" />
+            <p className="text-sm text-ink/75">
+              <b className="text-ink">Inicia sesión o crea tu cuenta para terminar tu compra.</b> Tu bolsa se queda guardada y podrás ver tus pedidos y pagos en tu perfil.
+            </p>
+          </motion.div>
+        )}
 
         <div className="relative mb-8 flex w-fit rounded-full bg-white p-1">
           {(['in', 'up'] as const).map((m) => (

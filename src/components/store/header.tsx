@@ -6,7 +6,7 @@ import { Logo } from '@/components/brand/logo';
 import { CurrencyToggle } from './currency-toggle';
 import { useCart } from '@/providers/cart';
 import { useAuth } from '@/providers/auth';
-import { useCategories } from '@/hooks/queries';
+import { useCategories, usePendingPayments } from '@/hooks/queries';
 import { lockScroll } from '@/lib/smooth-scroll';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +18,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
   const { count, open, bump } = useCart();
   const { profile, isStaff } = useAuth();
   const { data: categories = [] } = useCategories();
+  const pendingPayments = usePendingPayments().length;
   const [location] = useLocation();
   const overHero = location === '/' && !solid;
 
@@ -67,8 +68,18 @@ export function Header({ onSearch }: { onSearch: () => void }) {
                 <LayoutDashboard className="h-[18px] w-[18px]" />
               </Link>
             )}
-            <Link href={profile ? '/cuenta' : '/login'} className="grid h-10 w-10 place-items-center rounded-full hover:bg-ink/5" aria-label="Mi cuenta">
+            <Link
+              href={profile ? '/cuenta' : '/login'}
+              className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-ink/5"
+              aria-label={pendingPayments ? `Mi cuenta, ${pendingPayments} ${pendingPayments === 1 ? 'pago pendiente' : 'pagos pendientes'}` : 'Mi cuenta'}
+            >
               <User className="h-[18px] w-[18px]" />
+              {pendingPayments > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-2.5 w-2.5">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-berry-500 opacity-60" />
+                  <span className="relative h-2.5 w-2.5 rounded-full bg-berry-500 ring-2 ring-white" />
+                </span>
+              )}
             </Link>
             <button type="button" onClick={open} className="relative grid h-10 w-10 place-items-center rounded-full bg-ink text-white transition hover:bg-blush-600" aria-label={`Carrito, ${count} productos`}>
               <motion.span key={bump} animate={bump ? { rotate: [0, -18, 14, -8, 0], scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.6 }}>

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Link, useParams } from 'wouter';
+import { Link, useParams, useSearch } from 'wouter';
 import { motion } from 'framer-motion';
-import { Check, Copy, Loader2, Wallet } from 'lucide-react';
+import { AlertCircle, Check, Clock, Copy, Loader2, Wallet } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
-import { useOrderByToken, useSettings } from '@/hooks/queries';
+import { awaitingPayment, useOrderByToken, useSettings } from '@/hooks/queries';
 import { startMercadoPago } from '@/lib/api';
 import { money, orderStatusLabel, paymentMethodLabel, paymentStatusLabel, whatsappLink } from '@/lib/format';
 import { Sparkle } from '@/components/brand/logo';
@@ -15,7 +15,12 @@ const timeline: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped',
 
 export default function OrderPage() {
   const { token = '' } = useParams<{ token: string }>();
-  const { data: order, isLoading } = useOrderByToken(token);
+  // Mercado Pago regresa con ?collection_status=approved|in_process|pending|rejected
+  const query = new URLSearchParams(useSearch());
+  const mpReturn = query.get('collection_status') ?? query.get('status');
+  const [checkingSince] = useState(() => Date.now());
+  const slow = Date.now() - checkingSince > 120_000;
+  const { data: order, isLoading } = useOrderByToken(token, mpReturn === 'approved' && !slow);
   const { data: settings } = useSettings();
   const [paying, setPaying] = useState(false);
 
@@ -35,6 +40,10 @@ export default function OrderPage() {
 
   const fmt = (n: number) => money(n, order.currency);
   const paid = order.payment_status === 'paid';
+  const owes = awaitingPayment(order);
+  const confirming = owes && order.payment_method === 'mercadopago' && order.payment_status === 'pending' && mpReturn === 'approved';
+  const inProcess = owes && order.payment_method === 'mercadopago' && order.payment_status === 'pending' && (mpReturn === 'in_process' || mpReturn === 'pending');
+  const failed = owes && (order.payment_status === 'failed' || (mpReturn === 'rejected' && order.payment_status === 'pending'));
   const currentStep = order.status === 'completed' ? timeline.length - 1 : timeline.indexOf(order.status);
   const steps = order.delivery_method === 'pickup' ? timeline.filter((s) => s !== 'shipped') : timeline;
   const whatsappMsg = `¡Hola Shoppely! Mi pedido es el #${order.folio} por ${fmt(order.total)}.${order.payment_method === 'transfer' && !paid ? ' Te envío mi comprobante de transferencia.' : ''}`;
@@ -114,6 +123,37 @@ export default function OrderPage() {
           <p className="mt-10 rounded-3xl bg-ink p-5 text-center font-semibold text-white">Este pedido fue cancelado</p>
         )}
 
+        {owes && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className={cn('mt-6 flex items-start gap-4 rounded-[28px] p-5', failed ? 'bg-berry-500 text-white' : 'bg-ink text-white')}
+          >
+            <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-2xl', failed ? 'bg-white/20' : 'bg-blush-400 text-ink')}>
+              {confirming && !slow ? <Loader2 className="h-5 w-5 animate-spin" /> : failed ? <AlertCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+            </span>
+            <div>
+              <p className="font-semibold">
+                {confirming ? (slow ? 'Mercado Pago aún no nos confirma tu pago' : 'Estamos confirmando tu pago con Mercado Pago…')
+                  : failed ? 'Tu pago no se completó'
+                  : inProcess ? 'Tu pago está en proceso'
+                  : 'Falta tu pago'}
+              </p>
+              <p className="mt-0.5 text-sm text-white/70">
+                {confirming ? (slow
+                  ? 'Si ya se hizo el cargo, no vuelvas a pagar: escríbenos por WhatsApp con tu número de pedido y lo revisamos.'
+                  : 'Tarda unos segundos. Esta página se actualiza sola.')
+                  : failed ? 'No se hizo ningún cargo. Puedes intentarlo otra vez, con otra tarjeta si lo prefieres.'
+                  : inProcess ? 'Mercado Pago nos avisará en cuanto se acredite y lo verás aquí y en tu perfil.'
+                  : order.payment_method === 'transfer'
+                    ? `Apartamos tu pedido. Transfiere ${fmt(order.total)} y envíanos tu comprobante por WhatsApp para prepararlo.`
+                    : `Apartamos tu pedido. Paga ${fmt(order.total)} con Mercado Pago para que lo preparemos.`}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {!paid && order.status !== 'cancelled' && order.payment_method === 'transfer' && settings && (
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-6 rounded-[32px] bg-blush-300 p-6">
             <p className="text-lg font-semibold">Datos para transferencia</p>
@@ -129,9 +169,9 @@ export default function OrderPage() {
           </motion.div>
         )}
 
-        {!paid && order.status !== 'cancelled' && order.payment_method === 'mercadopago' && (
-          <button type="button" onClick={payWithMp} disabled={paying} className="btn-dark mt-6 w-full py-4 text-base">
-            {paying ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Wallet className="h-5 w-5" /> Pagar con Mercado Pago</>}
+        {!paid && !confirming && !inProcess && order.status !== 'cancelled' && order.payment_method === 'mercadopago' && (
+          <button type="button" onClick={payWithMp} disabled={paying} className="btn-dark mt-4 w-full py-4 text-base">
+            {paying ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Wallet className="h-5 w-5" /> {failed ? 'Intentar pagar de nuevo' : 'Pagar con Mercado Pago'}</>}
           </button>
         )}
 
